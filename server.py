@@ -1,52 +1,24 @@
-from flask import Flask, Response,render_template
-import pyaudio
+import asyncio
+import pathlib
+import ssl
+import websockets
 
-app = Flask(__name__)
+async def wss_handler(websocket, path):
+    data_chunk = await websocket.recv()
+    print(f"data chunk recv, size: {len(data_chunk)}")
 
-def genHeader(sampleRate, bitsPerSample, channels, samples):
-    datasize = 10240000 # Some veeery big number here instead of: #samples * channels * bitsPerSample // 8
-    o = bytes("RIFF",'ascii')                                               # (4byte) Marks file as RIFF
-    o += (datasize + 36).to_bytes(4,'little')                               # (4byte) File size in bytes excluding this and RIFF marker
-    o += bytes("WAVE",'ascii')                                              # (4byte) File type
-    o += bytes("fmt ",'ascii')                                              # (4byte) Format Chunk Marker
-    o += (16).to_bytes(4,'little')                                          # (4byte) Length of above format data
-    o += (1).to_bytes(2,'little')                                           # (2byte) Format type (1 - PCM)
-    o += (channels).to_bytes(2,'little')                                    # (2byte)
-    o += (sampleRate).to_bytes(4,'little')                                  # (4byte)
-    o += (sampleRate * channels * bitsPerSample // 8).to_bytes(4,'little')  # (4byte)
-    o += (channels * bitsPerSample // 8).to_bytes(2,'little')               # (2byte)
-    o += (bitsPerSample).to_bytes(2,'little')                               # (2byte)
-    o += bytes("data",'ascii')                                              # (4byte) Data Chunk Marker
-    o += (datasize).to_bytes(4,'little')                                    # (4byte) Data size in bytes
-    return o
+    response = '0'
+    await websocket.send(response)
 
-FORMAT = pyaudio.paInt16
-CHUNK = 1024 #1024
-RATE = 44100
-bitsPerSample = 16 #16
-CHANNELS = 1
-wav_header = genHeader(RATE, bitsPerSample, CHANNELS, CHUNK)
+ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+cert = pathlib.Path(__file__).with_name("cert.pem")
+key = pathlib.Path(__file__).with_name("key.pem")
+ssl_context.load_cert_chain(cert, keyfile=key)
 
-audio = pyaudio.PyAudio()
+start_server = websockets.serve(
+    wss_handler, "localhost", 8765, ssl=ssl_context
+)
 
-
-stream = audio.open(format=FORMAT, channels=CHANNELS,
-    rate=RATE, input=True, input_device_index=10,
-    frames_per_buffer=CHUNK)
-
-@app.route('/audio_unlim')
-def audio_unlim():
-    # start Recording
-    def sound():
-        data = wav_header
-        data += stream.read(CHUNK)
-        yield(data)
-        while True:
-            data = stream.read(CHUNK)
-            yield(data)
-
-    return Response(sound(), mimetype="audio/x-wav")
-
-
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', debug=True, threaded=True,port=5000)
+asyncio.get_event_loop().run_until_complete(start_server)
+print('start complete')
+asyncio.get_event_loop().run_forever()

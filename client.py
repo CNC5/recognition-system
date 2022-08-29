@@ -1,65 +1,99 @@
-loop = asyncio.get_event_loop()
+import asyncio
+import websockets
+import time
+import ssl
+import pathlib
+import pyaudio
+import wave
+import aioconsole
+
+uri = "wss://localhost:8765"
+ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+ssl_context.check_hostname = False
+cert = pathlib.Path(__file__).with_name("cert.pem")
+ssl_context.load_verify_locations(cert)
 
 
 class bus_class:
     def __init__(self):
         self.run_flag = 1
-        self.socket_cache = None
-        self.file_cache = None
-
+        self.socket_cache = []
+        self.file_cache = []
+        self.socket_answer = None
+        self.chunk_count = 0
 
 bus = bus_class()
 
-def read_audio_chunk():
-    data = stream.read(chunk)
-    file_cache.append(data)
-    socket_cache.append(data)
+chunk = 1024
+sample_format = pyaudio.paInt16
+channels = 2
+fs = 44100
+seconds = 3
+audio_iface = pyaudio.PyAudio()
+stream = audio_iface.open(format=sample_format,
+                channels=channels,
+                rate=fs,
+                frames_per_buffer=chunk,
+                input=True)
 
-def stop_audio_stream():
+
+def record_to_cache():
+    rstart = time.localtime()
+    while bus.run_flag:
+        data = stream.read(chunk)
+        bus.file_cache.append(data)
+        bus.socket_cache.append(data)
+        bus.chunk_count += 1
+
     stream.stop_stream()
     stream.close()
     audio_iface.terminate()
+    rstop = time.localtime()
 
-def write_audio_file():
-    filename = f'{rstart.tm_sec}_{rstart.tm_min}_{rstart.tm_hour}_\
-                {rstart.tm_mday}_{rstart.tm_mon}_{rstart.tm_year}_\
-                record.wav'
+def write_to_file():
+    sample_format = pyaudio.paInt16
+    channels = 2
+    fs = 44100
+    filename = f'record_on_client.wav'
+                #{rstart.tm_sec}_{rstart.tm_min}_{rstart.tm_hour}_\
+                #{rstart.tm_mday}_{rstart.tm_mon}_{rstart.tm_year}_\
 
     wf = wave.open(filename, 'wb')
     wf.setnchannels(channels)
     wf.setsampwidth(stream.get_sample_size(sample_format))
     wf.setframerate(fs)
-    wf.writeframes(b''.join(file_cache))
+    while bus.run_flag:
+        wf.writeframes(b''.join(bus.file_cache.pop(0)))
     wf.close()
-
-def record_stream():
-    rstart = time.localtime()
-    while run_flag:
-        read_audio_chunk()
-    stop_audio_stream()
-    rstop = time.localtime()
-    write_audio_file()
-
-
-
-def record_to_cache():
 
 
 
 async def send_to_socket():
-
+    async with websockets.connect(uri, ssl=ssl_context) as websocket:
+        while bus.run_flag:
+            sound_chunk = bus.socket_cache.pop(0)
+            await websocket.send(sound_chunk)
+            bus.socket_answer = await websocket.recv()
 
 
 async def record_in_thread():
-    await loop.run_in_executor(record_to_cache)
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, record_to_cache)
 
-async def send_to_socket():
-    await websocket.send(cache)
+async def write_in_thread():
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, write_to_file)
 
-async def write_to_file():
-    await aiofiles.open().write(cache)
+async def logger():
+    while bus.run_flag:
+        await aioconsole.aprint(f'Running: {bool(bus.run_flag)}; Chunk: {bus.chunk_count}')
+        await asyncio.sleep(0.5)
 
 async def main():
-    await asyncio.gather(record_in_thread, send_to_socket, write_to_file)
+    logger_future = asyncio.ensure_future(logger())
+    websocket_future = asyncio.ensure_future(send_to_socket())
+    await asyncio.gather(record_in_thread(), write_in_thread())
+    await websocket_future
+    await logger_future
 
 asyncio.run(main())

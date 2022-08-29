@@ -13,7 +13,7 @@ async def start_stream():
     async with websockets.connect(uri, ssl=ssl_context) as websocket:
         name = input("What's your name? ")
 
-        await websocket.send(sound_chunk)
+        await websocket.send(name)
         print(f"> {name}")
 
         greeting = await websocket.recv()
