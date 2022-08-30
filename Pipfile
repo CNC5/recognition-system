@@ -10,6 +10,8 @@ websockets = "*"
 asyncio = "*"
 aiofiles = "*"
 aioconsole = "*"
+pocketsphinx = "*"
+speechrecognition = "*"
 
 [dev-packages]
 

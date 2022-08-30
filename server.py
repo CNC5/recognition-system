@@ -3,12 +3,14 @@ import pathlib
 import ssl
 import websockets
 
-async def wss_handler(websocket, path):
-    data_chunk = await websocket.recv()
-    print(f"data chunk recv, size: {len(data_chunk)}")
 
-    response = '0'
-    await websocket.send(response)
+async def wss_handler(websocket, path):
+    data_chunk = ''
+    while data_chunk != 'stop':
+        data_chunk = await websocket.recv()
+        print(f"data chunk recv, size: {len(data_chunk)}")
+        await websocket.send('0')
+    print('got stopsig from remote')
 
 ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 cert = pathlib.Path(__file__).with_name("cert.pem")

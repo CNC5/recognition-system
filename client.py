@@ -62,28 +62,32 @@ def write_to_file():
     wf = wave.open(filename, 'wb')
     wf.setnchannels(channels)
     wf.setsampwidth(pyaudio.get_sample_size(sample_format))
-
     wf.setframerate(fs)
     while bus.run_flag:
-        wf.writeframes(bus.file_cache.pop(0))
-        bus.processed_chunk_count += 1
+        if bus.file_cache:
+            wf.writeframes(bus.file_cache.pop(0))
+            bus.processed_chunk_count += 1
+        else:
+            time.sleep(0.1)
     wf.close()
 
 def logger():
     while bus.run_flag:
+        time.sleep(0.1)
         print(f'Running, chunk: {bus.chunk_count}, processed: {bus.processed_chunk_count}, sent: {bus.sent_chunk_count}, cache size: {len(bus.file_cache)}\r', end='')
 
 async def send_to_socket():
     async with websockets.connect(uri, ssl=ssl_context) as websocket:
         while bus.run_flag:
-            if bus.socket_cache[0]:
+            if bus.socket_cache:
                 sound_chunk = bus.socket_cache.pop(0)
                 await websocket.send(sound_chunk)
                 bus.socket_answer = await websocket.recv()
                 bus.sent_chunk_count += 1
             else:
                 await asyncio.sleep(0.1)
-
+        await websocket.send('stop')
+        answer = await websocket.recv()
 
 async def record_in_thread():
     loop = asyncio.get_event_loop()
@@ -97,9 +101,9 @@ async def log_in_thread():
     loop = asyncio.get_event_loop()
     await loop.run_in_executor(None, logger)
 
-async def main():
-    websocket_future = asyncio.ensure_future(send_to_socket())
-    await asyncio.gather(record_in_thread(), write_in_thread(), log_in_thread())
-    await websocket_future
+async def breaker():
+    await aioconsole.ainput()
+    bus.run_flag = 0
 
-#asyncio.run(main())
+loop = asyncio.get_event_loop()
+loop.run_until_complete(asyncio.gather(record_in_thread(), write_in_thread(), log_in_thread(), send_to_socket(), breaker()))
