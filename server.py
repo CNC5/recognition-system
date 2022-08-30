@@ -2,15 +2,36 @@ import asyncio
 import pathlib
 import ssl
 import websockets
+import time
+import pyaudio
+import wave
 
 
 async def wss_handler(websocket, path):
+    chunk_count = 0
     data_chunk = ''
+    rstart = time.localtime()
+    sample_format = pyaudio.paInt16
+    channels = 2
+    fs = 44100
+
+    print('handler start')
+    filename = await websocket.recv()
+    filename = 'server_' + filename
+    await websocket.send('0')
+    wf = wave.open(filename, 'wb')
+    wf.setnchannels(channels)
+    wf.setsampwidth(pyaudio.get_sample_size(sample_format))
+    wf.setframerate(fs)
     while data_chunk != 'stop':
         data_chunk = await websocket.recv()
-        print(f"data chunk recv, size: {len(data_chunk)}")
+        print(f'data chunk {chunk_count} recv, size: {len(data_chunk)}\r', end='')
         await websocket.send('0')
-    print('got stopsig from remote')
+        if data_chunk != 'stop':
+            wf.writeframes(data_chunk)
+        chunk_count += 1
+    wf.close()
+    print('\ngot sigstop from remote, handler stopped')
 
 ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 cert = pathlib.Path(__file__).with_name("cert.pem")
@@ -21,6 +42,6 @@ start_server = websockets.serve(
     wss_handler, "localhost", 8765, ssl=ssl_context
 )
 
+print('server start')
 asyncio.get_event_loop().run_until_complete(start_server)
-print('start complete')
 asyncio.get_event_loop().run_forever()

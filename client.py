@@ -23,6 +23,7 @@ class bus_class:
         self.chunk_count = 0
         self.processed_chunk_count = 0
         self.sent_chunk_count = 0
+        self.filename = ''
 
 bus = bus_class()
 
@@ -40,7 +41,6 @@ stream = audio_iface.open(format=sample_format,
 
 
 def record_to_cache():
-    rstart = time.localtime()
     while bus.run_flag:
         data = stream.read(chunk)
         bus.file_cache.append(data)
@@ -50,15 +50,14 @@ def record_to_cache():
     stream.stop_stream()
     stream.close()
     audio_iface.terminate()
-    rstop = time.localtime()
 
 def write_to_file():
+    rstart = time.localtime()
     sample_format = pyaudio.paInt16
     channels = 2
     fs = 44100
-    filename = f'record_on_client.wav'
-                #{rstart.tm_sec}_{rstart.tm_min}_{rstart.tm_hour}_\
-                #{rstart.tm_mday}_{rstart.tm_mon}_{rstart.tm_year}_\
+    filename = f'record_{rstart.tm_hour}:{rstart.tm_min}:{rstart.tm_sec}_{rstart.tm_mday}.{rstart.tm_mon}.{rstart.tm_year}.wav'
+    bus.filename = filename
     wf = wave.open(filename, 'wb')
     wf.setnchannels(channels)
     wf.setsampwidth(pyaudio.get_sample_size(sample_format))
@@ -74,10 +73,16 @@ def write_to_file():
 def logger():
     while bus.run_flag:
         time.sleep(0.1)
-        print(f'Running, chunk: {bus.chunk_count}, processed: {bus.processed_chunk_count}, sent: {bus.sent_chunk_count}, cache size: {len(bus.file_cache)}\r', end='')
+        print(f'Running, chunk: {bus.chunk_count},\
+    processed: {bus.processed_chunk_count},\
+    sent: {bus.sent_chunk_count},\
+    cache size: {len(bus.file_cache)}\r',\
+    end='')
 
 async def send_to_socket():
     async with websockets.connect(uri, ssl=ssl_context) as websocket:
+        await websocket.send(bus.filename)
+        await websocket.recv()
         while bus.run_flag:
             if bus.socket_cache:
                 sound_chunk = bus.socket_cache.pop(0)
