@@ -7,7 +7,7 @@ import aioconsole
 chunk = 1024
 sample_format = pyaudio.paInt16
 channels = 2
-fs = 44100  # Record at 44100 samples per second
+fs = 44100
 seconds = 3
 
 audio_iface = pyaudio.PyAudio()
@@ -72,9 +72,3 @@ async def main():
 
 
 asyncio.run(main())
-
-
-#breaker_future = asyncio.ensure_future(breaker())
-#audio_stream_future = asyncio.ensure_future(record_stream())
-#asyncio.get_event_loop().run_until_complete(breaker())
-#audio_stream_future.terminate()
