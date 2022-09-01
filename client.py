@@ -24,8 +24,10 @@ class bus_class:
         self.processed_chunk_count = 0
         self.sent_chunk_count = 0
         self.filename = ''
+        self.rec_start = 0
 
 bus = bus_class()
+bus.rec_start = time.time()
 
 chunk = 1024
 sample_format = pyaudio.paInt16
@@ -72,11 +74,13 @@ def write_to_file():
 
 def logger():
     while bus.run_flag:
+        duration = time.time() - bus.rec_start
         time.sleep(0.1)
         print(f'Running, chunk: {bus.chunk_count},\
     processed: {bus.processed_chunk_count},\
     sent: {bus.sent_chunk_count},\
-    cache size: {len(bus.file_cache)}\r',\
+    cache size: {len(bus.file_cache)},\
+    started {duration} seconds ago\r'\
     end='')
 
 async def send_to_socket():
