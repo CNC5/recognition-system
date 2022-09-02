@@ -6,11 +6,16 @@ import pathlib
 import pyaudio
 import wave
 import aioconsole
+import sys
 
-uri = "wss://localhost:8765"
+if len(sys.argv) > 1:
+    uri = f'wss://{sys.argv[1]}'
+else:
+    uri = 'wss://localhost:8765'
+
 ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 ssl_context.check_hostname = False
-cert = pathlib.Path(__file__).with_name("cert.pem")
+cert = pathlib.Path(__file__).with_name('cert.pem')
 ssl_context.load_verify_locations(cert)
 
 

@@ -3,7 +3,7 @@ import pathlib
 import ssl
 import websockets
 import time
-import pyaudio
+#import pyaudio
 import wave
 
 
@@ -11,7 +11,7 @@ async def wss_handler(websocket, path):
     chunk_count = 0
     data_chunk = ''
     rstart = time.localtime()
-    sample_format = pyaudio.paInt16
+    sample_format = 8 #pyaudio.paInt16
     channels = 2
     fs = 44100
 
@@ -21,7 +21,7 @@ async def wss_handler(websocket, path):
     await websocket.send('0')
     wf = wave.open(filename, 'wb')
     wf.setnchannels(channels)
-    wf.setsampwidth(pyaudio.get_sample_size(sample_format))
+    wf.setsampwidth(2) #pyaudio.get_sample_size(sample_format)
     wf.setframerate(fs)
     while data_chunk != 'stop':
         data_chunk = await websocket.recv()
