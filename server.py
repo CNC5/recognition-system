@@ -41,7 +41,7 @@ async def wss_handler(websocket, path):
             wf.writeframes(data_chunk)
         chunk_count += 1
     wf.close()
-    print('\ngot sigstop from remote, handler stopped')
+    print('\ngot sigstop from remote, handler stop')
 
 ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 cert = pathlib.Path(__file__).with_name("cert.pem")

@@ -6,6 +6,7 @@ import pathlib
 import pyaudio
 import wave
 import aioconsole
+<<<<<<< HEAD
 from argparse import ArgumentParser
 
 parser = ArgumentParser()
@@ -26,6 +27,9 @@ if args.port:
     uri += args.port
 else:
     uri += '8765'
+=======
+import math
+>>>>>>> 750ec85 (v0.02)
 
 ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 ssl_context.check_hostname = False
@@ -98,9 +102,14 @@ def logger():
         print(f'Running, chunk: {bus.chunk_count},\
     processed: {bus.processed_chunk_count},\
     sent: {bus.sent_chunk_count},\
+<<<<<<< HEAD
     file cache size: {len(bus.file_cache)},\
     socket cache size: {len(bus.socket_cache)},\
     started {duration} seconds ago\r'\
+=======
+    cache size: {len(bus.file_cache)},\
+    started {math.floor(duration)} seconds ago\r',\
+>>>>>>> 750ec85 (v0.02)
     end='')
 
 async def send_to_socket():
