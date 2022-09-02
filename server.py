@@ -13,6 +13,7 @@ parser.add_argument("-p", "--port", dest="port",
 
 args = parser.parse_args()
 if args.port:
+    print(f'Listening on {args.port}')
     server_port = args.port
 else:
     server_port = 8765

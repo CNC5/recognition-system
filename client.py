@@ -6,8 +6,24 @@ import pathlib
 import pyaudio
 import wave
 import aioconsole
-<<<<<<< HEAD
 from argparse import ArgumentParser
+import math
+from ctypes import CFUNCTYPE, c_char_p, c_int, cdll
+from contextlib import contextmanager
+
+ERROR_HANDLER_FUNC = CFUNCTYPE(None, c_char_p, c_int, c_char_p, c_int, c_char_p)
+
+def py_error_handler(filename, line, function, err, fmt):
+    pass
+
+c_error_handler = ERROR_HANDLER_FUNC(py_error_handler)
+
+@contextmanager
+def noalsaerr():
+    asound = cdll.LoadLibrary('libasound.so')
+    asound.snd_lib_error_set_handler(c_error_handler)
+    yield
+    asound.snd_lib_error_set_handler(None)
 
 parser = ArgumentParser()
 parser.add_argument("-d", "--dest", dest="host",
@@ -27,9 +43,9 @@ if args.port:
     uri += args.port
 else:
     uri += '8765'
-=======
-import math
->>>>>>> 750ec85 (v0.02)
+
+if args.host or args.port:
+    print(f'Sending to {uri}')
 
 ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 ssl_context.check_hostname = False
@@ -57,12 +73,13 @@ sample_format = pyaudio.paInt16
 channels = 2
 fs = 44100
 seconds = 3
-audio_iface = pyaudio.PyAudio()
-stream = audio_iface.open(format=sample_format,
-                channels=channels,
-                rate=fs,
-                frames_per_buffer=chunk,
-                input=True)
+with noalsaerr():
+    audio_iface = pyaudio.PyAudio()
+    stream = audio_iface.open(format=sample_format,
+                    channels=channels,
+                    rate=fs,
+                    frames_per_buffer=chunk,
+                    input=True)
 
 
 def record_to_cache():
@@ -102,14 +119,9 @@ def logger():
         print(f'Running, chunk: {bus.chunk_count},\
     processed: {bus.processed_chunk_count},\
     sent: {bus.sent_chunk_count},\
-<<<<<<< HEAD
     file cache size: {len(bus.file_cache)},\
     socket cache size: {len(bus.socket_cache)},\
-    started {duration} seconds ago\r'\
-=======
-    cache size: {len(bus.file_cache)},\
-    started {math.floor(duration)} seconds ago\r',\
->>>>>>> 750ec85 (v0.02)
+    started {math.floor(duration)} seconds ago \r',\
     end='')
 
 async def send_to_socket():
