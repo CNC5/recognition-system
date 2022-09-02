@@ -6,12 +6,26 @@ import pathlib
 import pyaudio
 import wave
 import aioconsole
-import sys
+from argparse import ArgumentParser
 
-if len(sys.argv) > 1:
-    uri = f'wss://{sys.argv[1]}'
+parser = ArgumentParser()
+parser.add_argument("-d", "--dest", dest="host",
+                    help="Change destination host to HOST", metavar="HOST")
+parser.add_argument("-p", "--port", dest="port",
+                    help="Change destination port to PORT", metavar="PORT")
+
+args = parser.parse_args()
+
+uri = 'wss://'
+if args.host:
+    uri += args.host
 else:
-    uri = 'wss://localhost:8765'
+    uri += 'localhost'
+uri += ':'
+if args.port:
+    uri += args.port
+else:
+    uri += '8765'
 
 ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 ssl_context.check_hostname = False
