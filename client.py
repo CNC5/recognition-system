@@ -79,7 +79,8 @@ def logger():
         print(f'Running, chunk: {bus.chunk_count},\
     processed: {bus.processed_chunk_count},\
     sent: {bus.sent_chunk_count},\
-    cache size: {len(bus.file_cache)},\
+    file cache size: {len(bus.file_cache)},\
+    socket cache size: {len(bus.socket_cache)},\
     started {duration} seconds ago\r'\
     end='')
 
