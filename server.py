@@ -10,13 +10,20 @@ from argparse import ArgumentParser
 parser = ArgumentParser()
 parser.add_argument("-p", "--port", dest="port",
                     help="Change the port to serve on to PORT", metavar="PORT")
+parser.add_argument("-d", "--dest", dest="host",
+                    help="Change the address to serve on to HOST", metavar="HOST")
 
 args = parser.parse_args()
 if args.port:
-    print(f'Listening on {args.port}')
     server_port = args.port
 else:
     server_port = 8765
+if args.host:
+    server_addr = args.host
+else:
+    server_addr = 'localhost'
+if args.port or args.host:
+    print(f'Serving on {server_addr}:{server_port}')
 
 async def wss_handler(websocket, path):
     chunk_count = 0
@@ -50,7 +57,7 @@ key = pathlib.Path(__file__).with_name("key.pem")
 ssl_context.load_cert_chain(cert, keyfile=key)
 
 start_server = websockets.serve(
-    wss_handler, "localhost", server_port, ssl=ssl_context
+    wss_handler, server_addr, server_port, ssl=ssl_context
 )
 
 print('server start')
