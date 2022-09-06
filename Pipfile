@@ -12,6 +12,7 @@ aiofiles = "*"
 aioconsole = "*"
 pocketsphinx = "*"
 speechrecognition = "*"
+espnet = "*"
 
 [dev-packages]
 

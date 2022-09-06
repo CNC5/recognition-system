@@ -30,6 +30,7 @@ parser.add_argument("-d", "--dest", dest="host",
                     help="Change destination host to HOST", metavar="HOST")
 parser.add_argument("-p", "--port", dest="port",
                     help="Change destination port to PORT", metavar="PORT")
+parser.add_argument('--play-realtime', dest='play_realtime', action='store_true')
 
 args = parser.parse_args()
 
@@ -64,6 +65,7 @@ class bus_class:
         self.sent_chunk_count = 0
         self.filename = ''
         self.rec_start = 0
+        self.player_cache = []
 
 bus = bus_class()
 bus.rec_start = time.time()
@@ -81,12 +83,27 @@ with noalsaerr():
                     frames_per_buffer=chunk,
                     input=True)
 
+    player_stream = audio_iface.open(format=sample_format,
+                    channels=channels,
+                    rate=fs,
+                    frames_per_buffer=chunk,
+                    output=True)
+
+def play_from_cache():
+    while bus.run_flag:
+        if bus.player_cache:
+            chunk = bus.player_cache.pop(0)
+            player_stream.write(chunk)
+        else:
+            time.sleep(0.1)
 
 def record_to_cache():
     while bus.run_flag:
         data = stream.read(chunk)
         bus.file_cache.append(data)
         bus.socket_cache.append(data)
+        if args.play_realtime:
+            bus.player_cache.append(data)
         bus.chunk_count += 1
 
     stream.stop_stream()
@@ -139,21 +156,29 @@ async def send_to_socket():
         await websocket.send('stop')
         answer = await websocket.recv()
 
-async def record_in_thread():
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, record_to_cache)
-
-async def write_in_thread():
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, write_to_file)
-
-async def log_in_thread():
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, logger)
-
 async def breaker():
     await aioconsole.ainput()
     bus.run_flag = 0
 
+async def run_in_thread(coro):
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, coro)
+
+if args.play_realtime:
+    thread_collection = asyncio.gather(
+        send_to_socket(),
+        run_in_thread(record_to_cache),
+        run_in_thread(write_to_file),
+        run_in_thread(logger),
+        run_in_thread(play_from_cache),
+        breaker())
+else:
+    thread_collection = asyncio.gather(
+        send_to_socket(),
+        run_in_thread(record_to_cache),
+        run_in_thread(write_to_file),
+        run_in_thread(logger),
+        breaker())
+
 loop = asyncio.get_event_loop()
-loop.run_until_complete(asyncio.gather(record_in_thread(), write_in_thread(), log_in_thread(), send_to_socket(), breaker()))
+loop.run_until_complete(thread_collection)

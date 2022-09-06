@@ -8,12 +8,13 @@ import wave
 from argparse import ArgumentParser
 
 parser = ArgumentParser()
-parser.add_argument("-p", "--port", dest="port",
-                    help="Change the port to serve on to PORT", metavar="PORT")
-parser.add_argument("-d", "--dest", dest="host",
-                    help="Change the address to serve on to HOST", metavar="HOST")
+parser.add_argument('-p', '--port', dest='port',
+                    help='Change the port to serve on to PORT', metavar='PORT')
+parser.add_argument('-d', '--dest', dest='host',
+                    help='Change the address to serve on to HOST', metavar='HOST')
 
 args = parser.parse_args()
+
 if args.port:
     server_port = args.port
 else:
