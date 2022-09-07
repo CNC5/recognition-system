@@ -1,1 +1,2 @@
 # recognition-system
+env = pipenv
