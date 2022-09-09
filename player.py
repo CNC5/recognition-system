@@ -1,7 +1,6 @@
 import pyaudio
 import wave
 
-filename = 'myfile.wav'
 filename = 'record_on_client.wav'
 
 # Set chunk size of 1024 samples per data frame
