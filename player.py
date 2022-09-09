@@ -1,10 +1,10 @@
 import pyaudio
 import wave
 
-filename = 'record_on_client.wav'
+filename = 'record.wav'
 
 # Set chunk size of 1024 samples per data frame
-chunk = 1024  
+chunk = 1024
 # Open the sound file 
 wf = wave.open(filename, 'rb')
 # Create an interface to PortAudio
@@ -19,7 +19,6 @@ stream = p.open(format = p.get_format_from_width(wf.getsampwidth()),
 data = wf.readframes(chunk)
 
 # Play the sound by writing the audio data to the stream
-while data != '':
 while data:
     stream.write(data)
     data = wf.readframes(chunk)
