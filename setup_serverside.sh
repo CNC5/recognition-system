@@ -1,9 +1,31 @@
 if [[ ! -e /tmp/model_in_ram ]]; then
 	echo 'model RAM folder not found, creating one'
 	mkdir /tmp/model_in_ram
-	cp -r ./model/* /tmp/model_in_ram
 else
 	echo 'model folder OK'
+fi
+
+if [[ ! -e exp ]]; then
+	if [[ ! -f asr_train_asr_conformer_raw_ru_bpe100_valid.acc.ave.zip ]]; then
+		echo 'no model or model archive was found, downloading and unpacking'
+		wget https://zenodo.org/record/4541727/files/asr_train_asr_conformer_raw_ru_bpe100_valid.acc.ave.zip?download=1 && mv asr_train_asr_conformer_raw_ru_bpe100_valid.acc.ave.zip?download=1 asr_train_asr_conformer_raw_ru_bpe100_valid.acc.ave.zip && unzip asr_train_asr_conformer_raw_ru_bpe100_valid.acc.ave.zip
+	else
+		echo 'no model was found but a model archive is present, unpacking'
+		unzip asr_train_asr_conformer_raw_ru_bpe100_valid.acc.ave.zip
+	fi
+else
+	echo 'model OK'
+fi
+
+if [[ ! -e /tmp/model_in_ram/exp ]]; then
+	if [[ -e exp ]]; then
+		mv exp /tmp/model_in_ram
+		echo 'model loaded'
+	else
+		echo 'no model to load to RAM, terminating'
+	fi
+else
+	echo 'model already loaded'
 fi
 
 if [[ ! -f cert.pem ]] && [[ ! -f key.pem ]]; then

@@ -13,6 +13,9 @@ aioconsole = "*"
 pocketsphinx = "*"
 speechrecognition = "*"
 espnet = "*"
+espnet-model-zoo = "*"
+matplotlib = "*"
+pysndfile = "*"
 
 [dev-packages]
 
