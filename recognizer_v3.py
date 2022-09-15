@@ -4,7 +4,6 @@ import string
 from espnet2.bin.asr_inference import Speech2Text
 import os
 
-fname = 'record.wav'
 
 #checks
 if (not os.path.isdir('/tmp/model_in_ram/exp')):
@@ -36,7 +35,7 @@ class Recognizer:
         text = text.upper()
         return text.translate(str.maketrans('', '', string.punctuation))
 
-    def predict(self):
+    def predict(self, fname):
         speech = self.load_audio(fname)
         nbests = self.speech2text(speech)
         text, *_ = nbests[0]
@@ -44,5 +43,5 @@ class Recognizer:
 
 if __name__ == '__main__':
     recg = Recognizer()
-    prediction = recg.predict()
+    prediction = recg.predict('record.wav')
     print(prediction)
