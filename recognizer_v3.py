@@ -22,7 +22,7 @@ class Recognizer:
             minlenratio=0.0,
             maxlenratio=0.0,
             ctc_weight=0.3,
-            beam_size=10,
+            beam_size=5,
             batch_size=0,
             nbest=1
         )
