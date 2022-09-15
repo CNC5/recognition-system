@@ -10,14 +10,14 @@ bash setup_serverside.sh
 
 ### default (localhost-to-localhost)
 server:
-	pipenv run python server.py<br>
+    pipenv run python server.py<br>
 
 client:
-	pipenv run python client.py
+    pipenv run python client.py
 
 ### custom
 server:
-	pipenv run python server.py -d 0.0.0.0 -p <serve_port><br>
+    pipenv run python server.py -d 0.0.0.0 -p <serve_port><br>
 
 client:
-	pipenv run python client.py -d <server_addr> -p <server_port>
+    pipenv run python client.py -d <server_addr> -p <server_port>
