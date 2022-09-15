@@ -1,3 +1,4 @@
+echo 'checks:'
 if [[ ! -e /tmp/model_in_ram ]]; then
 	echo 'model RAM folder not found, creating one'
 	mkdir /tmp/model_in_ram
