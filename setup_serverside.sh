@@ -1,4 +1,10 @@
 echo 'checks:'
+
+if [ '$(uname -m)' != 'amd64' ]; then
+	echo 'arch '$(uname -m)' is not supported'
+	exit 1
+fi
+
 if [[ ! -e /tmp/model_in_ram ]]; then
 	echo 'model RAM folder not found, creating one'
 	mkdir /tmp/model_in_ram
@@ -24,6 +30,7 @@ if [[ ! -e /tmp/model_in_ram/exp ]]; then
 		echo 'model loaded'
 	else
 		echo 'no model to load to RAM, terminating'
+		exit 1
 	fi
 else
 	echo 'model already loaded'
