@@ -72,7 +72,7 @@ bus.rec_start = time.time()
 
 chunk = 1024
 sample_format = pyaudio.paInt16
-channels = 2
+channels = 1
 fs = 44100
 seconds = 3
 with noalsaerr():

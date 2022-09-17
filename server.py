@@ -31,12 +31,12 @@ async def wss_handler(websocket, path):
     data_chunk = ''
     rstart = time.localtime()
     sample_format = 8 #pyaudio.paInt16
-    channels = 2
+    channels = 1
     fs = 44100
 
     print('handler start')
     filename = await websocket.recv()
-    filename = 'server_' + filename
+    filename = 'server-' + filename
     await websocket.send('0')
     wf = wave.open(filename, 'wb')
     wf.setnchannels(channels)

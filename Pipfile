@@ -16,6 +16,7 @@ espnet = "*"
 espnet-model-zoo = "*"
 matplotlib = "*"
 pysndfile = "*"
+vosk = "*"
 
 [dev-packages]
 

@@ -1,6 +1,8 @@
+#!/bin/bash
+
 echo 'checks:'
 
-if [ '$(uname -m)' != 'amd64' ]; then
+if [ $(uname -m) != 'x86_64' ]; then
 	echo 'arch '$(uname -m)' is not supported'
 	exit 1
 fi
@@ -26,7 +28,7 @@ fi
 
 if [[ ! -e /tmp/model_in_ram/exp ]]; then
 	if [[ -e exp ]]; then
-		mv exp /tmp/model_in_ram
+		cp exp /tmp/model_in_ram
 		echo 'model loaded'
 	else
 		echo 'no model to load to RAM, terminating'
