@@ -1,4 +1,4 @@
-# recognition-system
+# recognition-system (ABANDONED)
 env = pipenv
 
 ## install
