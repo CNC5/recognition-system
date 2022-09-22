@@ -8,5 +8,5 @@ contents = os.listdir()
 for filename in contents:
 	if 'record_' in filename:
 		r_type, r_time, r_date = filename.split('_')
-		r_hour, r_min, r_sec = rtime.split(':')
+		r_hour, r_min, r_sec = r_time.split(':')
 		

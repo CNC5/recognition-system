@@ -35,7 +35,7 @@ async def wss_handler(websocket, path):
 
     print('handler start')
     filename = await websocket.recv()
-    filename = 'server-' + filename
+    filename = 'server ' + filename
     await websocket.send('0')
     wf = wave.open(filename, 'wb')
     wf.setnchannels(channels)

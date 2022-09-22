@@ -11,19 +11,15 @@ import math
 from ctypes import CFUNCTYPE, c_char_p, c_int, cdll
 from contextlib import contextmanager
 
-ERROR_HANDLER_FUNC = CFUNCTYPE(None, c_char_p, c_int, c_char_p, c_int, c_char_p)
+ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+ssl_context.check_hostname = False
+cert = pathlib.Path(__file__).with_name('cert.pem')
+ssl_context.load_verify_locations(cert)
 
-def py_error_handler(filename, line, function, err, fmt):
-    pass
-
-c_error_handler = ERROR_HANDLER_FUNC(py_error_handler)
-
-@contextmanager
-def noalsaerr():
-    asound = cdll.LoadLibrary('libasound.so')
-    asound.snd_lib_error_set_handler(c_error_handler)
-    yield
-    asound.snd_lib_error_set_handler(None)
+chunk = 1024
+sample_format = pyaudio.paInt16
+channels = 1
+fs = 44100
 
 parser = ArgumentParser()
 parser.add_argument("-d", "--dest", dest="host",
@@ -31,7 +27,6 @@ parser.add_argument("-d", "--dest", dest="host",
 parser.add_argument("-p", "--port", dest="port",
                     help="Change destination port to PORT", metavar="PORT")
 parser.add_argument('--play-realtime', dest='play_realtime', action='store_true')
-
 args = parser.parse_args()
 
 uri = 'wss://'
@@ -48,10 +43,19 @@ else:
 if args.host or args.port:
     print(f'Sending to {uri}')
 
-ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-ssl_context.check_hostname = False
-cert = pathlib.Path(__file__).with_name('cert.pem')
-ssl_context.load_verify_locations(cert)
+
+ERROR_HANDLER_FUNC = CFUNCTYPE(None, c_char_p, c_int, c_char_p, c_int, c_char_p)
+def py_error_handler(filename, line, function, err, fmt):
+    pass
+c_error_handler = ERROR_HANDLER_FUNC(py_error_handler)
+
+@contextmanager
+def noalsaerr():
+    asound = cdll.LoadLibrary('libasound.so')
+    asound.snd_lib_error_set_handler(c_error_handler)
+    yield
+    asound.snd_lib_error_set_handler(None)
+
 
 
 class bus_class:
@@ -70,11 +74,6 @@ class bus_class:
 bus = bus_class()
 bus.rec_start = time.time()
 
-chunk = 1024
-sample_format = pyaudio.paInt16
-channels = 1
-fs = 44100
-seconds = 3
 with noalsaerr():
     audio_iface = pyaudio.PyAudio()
     stream = audio_iface.open(format=sample_format,
@@ -83,7 +82,8 @@ with noalsaerr():
                     frames_per_buffer=chunk,
                     input=True)
 
-    player_stream = audio_iface.open(format=sample_format,
+    if args.play_realtime:
+        player_stream = audio_iface.open(format=sample_format,
                     channels=channels,
                     rate=fs,
                     frames_per_buffer=chunk,
@@ -111,13 +111,12 @@ def record_to_cache():
     audio_iface.terminate()
 
 def write_to_file():
-    rstart = time.localtime()
     sample_format = pyaudio.paInt16
     channels = 2
     fs = 44100
-    filename = f'record_{rstart.tm_hour}:{rstart.tm_min}:{rstart.tm_sec}_{rstart.tm_mday}.{rstart.tm_mon}.{rstart.tm_year}.wav'
+    filename = f'{time.ctime().lower()}.wav'
     bus.filename = filename
-    wf = wave.open(filename, 'wb')
+    wf = wave.open('client '+filename, 'wb')
     wf.setnchannels(channels)
     wf.setsampwidth(pyaudio.get_sample_size(sample_format))
     wf.setframerate(fs)
